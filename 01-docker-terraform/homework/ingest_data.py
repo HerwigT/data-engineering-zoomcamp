@@ -26,7 +26,7 @@ dtype = {
 }
 
 dtype_taxi_zones = {
-    "LocationID": "string",
+    "LocationID": "Int64",
     "Borough": "string",
     "Zone": "string",
     "service_zone": "string"
@@ -56,31 +56,23 @@ def run(pg_user, pg_pass, pg_host, pg_port, pg_db, year, month, target_table, ch
 
     df_iter = pd.read_parquet(
         url,
-        dtype=dtype,
-        parse_dates=parse_dates,
-        iterator=True,
-        chunksize=chunksize
     )
 
 
-    first = True
 
-    for df_chunk in df_iter:
-        if first:
-            # Create table schema (no data)
-            df_chunk.head(0).to_sql(
-                name=target_table,
-                con=engine,
-                if_exists="replace"
-            )
-            first = False
+    # Create table schema (no data)
+    df_iter.head(0).to_sql(
+        name=target_table,
+        con=engine,
+        if_exists="replace"
+    )
 
-        # Insert chunk
-        df_chunk.to_sql(
-            name=target_table,
-            con=engine,
-            if_exists="append"
-        )
+    # Insert chunk
+    df_iter.to_sql(
+        name=target_table,
+        con=engine,
+        if_exists="append"
+    )
 
 
     taxi_zones = f'taxi_zone_lookup.csv'
